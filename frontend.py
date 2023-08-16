@@ -104,6 +104,7 @@ with tab3:
 
 st.divider()
 
+
 config = pd.DataFrame.from_dict(
     {
     "Austragungsjahr": [turney_year],
@@ -131,5 +132,4 @@ output_file = "".join(['{\r\n',
 )
 
 
-#st.json(output_file, expanded=False)
 st.download_button("erstellte JSON herunterladen",output_file,f'{turney_name}_{turney_year}.json')
