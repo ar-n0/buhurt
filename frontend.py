@@ -20,7 +20,7 @@ else:
 turney_year = st.text_input('Jahr des Turniers:',value=year_sug)
 
 
-turney_wikipage = st.text_input('Link zur Wikipage:',value= "")
+turney_wikipage = st.text_input('Link zur Wikipage des Turniers:',value= "")
  
 @st.cache_data
 def load_Data(wikipage):
