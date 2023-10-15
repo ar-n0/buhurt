@@ -38,7 +38,7 @@ with t1:
 with t2:
     allow_add = st.checkbox("Hinzufügen von Teilnehmern erlauben", value=False)
 
-st.caption("[ ℹ ] Du kannst fehlende Werte direkt in der Tabell nachtragen")
+st.caption("ℹ Du kannst fehlende Werte direkt in der Tabell nachtragen")
 
 if allow_add:
     dyn = "dynamic"
