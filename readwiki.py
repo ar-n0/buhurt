@@ -30,13 +30,31 @@ def normaliseStyle (style):
         return "defensiv"
     else:
         return "ausgeglichen"
-    
+
+def normaliseAmbition(ambition):
+    style = str(ambition).lower()
+    if "vorsichtig" in ambition:
+        return "vorsichtig"
+    elif "bedacht" in ambition:
+        return "bedacht"
+    elif "ehrgeizig" in ambition:
+        return "ehrgeizig"
+    elif "waghalsig" in ambition:
+        return "waghalsig"
+    else:
+        return "bedacht"
+
 def getTurneyContestants(turneypage):
     import pandas as pd
     tables = pd.read_html(turneypage)
     for table in tables:
         tcol = table.columns.tolist()
         if "Name" in tcol and ("Leichte Handwaffen" in tcol  or "Schwere Handwaffen" in tcol or "Lanzenreiten" in tcol):
+            linktbl = pd.DataFrame(getPageLinks(turneypage))
+            linktbl.set_index(0, inplace=True)
+            table.set_index("Name", inplace=True)
+            table = table.join(linktbl)
+            table.rename({1:"link"},axis=1,inplace=True)
             return table    
 
 def getPageLinks(turneypage):
@@ -82,8 +100,11 @@ def getTurneyprofile(fighterpage):
     for item in skills:
         if "Kampfstil" in item[0]:
             item[1] = normaliseStyle(item[1])
+        elif "Ambition" in item[0]:
+            item[1] = normaliseAmbition(item[1])
         else:
             item[1] = normaliseSkill(item[1])
+        
         if item[1] is not None:
             profile[item[0].split("(")[0].strip()] = item[1]
     
@@ -123,8 +144,7 @@ def getTurneyprofile(fighterpage):
 
     return profile         
 
-def generateTurneycontestants(contestants, wikipage):
-
+def generateTurneycontestants(turneytab, wikipage):
     import pandas as pd
     
     discipline_subs = {"Leichte Handwaffen":"WettkampfEinhand",
@@ -133,44 +153,14 @@ def generateTurneycontestants(contestants, wikipage):
                        "Tjost":"WettkampfTjost",
                        "Buhurt":"WettkampfBuhurt"
                     }
-
-
-    ttbl = contestants
-    linktbl = pd.DataFrame(getPageLinks(wikipage))
-    linktbl.set_index(0, inplace=True)
-    ttbl.set_index("Name", inplace=True)
-
-    turneytab = ttbl.join(linktbl)
-    turneytab.rename({1:"link"},axis=1,inplace=True)
+    turneytab.rename(discipline_subs,axis=1,inplace=True)
 
     for dis in discipline_subs.keys():
         if dis in turneytab.columns:
             turneytab[dis] = turneytab[dis].apply(lambda x: x.upper().strip() == "X")
-    turneytab.rename(discipline_subs,axis=1,inplace=True)
 
-    
-    profiles = []
-    for index, row in turneytab.iterrows():
-         prof  = getTurneyprofile(row["link"])
-         if prof is not None:
-            prof["link"] = row["link"]
-            profiles.append(prof)
-    
-    profile_frame = pd.DataFrame(profiles)
-    profile_frame.set_index("link",inplace=True)
 
-    profile_subs = {
-                    "Leichte Handwaffen":"ErfahrungsgradLh",
-                    "Schwere Handwaffen":"ErfahrungsgradSh",
-                    "Lanzenreiten":"ErfahrungsgradLr",
-                    "Buhurt":"ErfahrungsgradBu",
-                    "Wurfwaffen":"ErfahrungsgradWu",
-                    "Schusswaffen":"ErfahrungsgradSc"
-                    }
-    
-    profile_frame.rename(profile_subs,axis=1,inplace=True)
-    
-    
+
     
     turneytab.insert(0,"Name",turneytab.index)
     #turneytab.insert(1,"WerteStand","1045")
@@ -179,12 +169,11 @@ def generateTurneycontestants(contestants, wikipage):
     turneytab.insert(1,"Springer",False)
 
 
-    turneytab = pd.merge(turneytab, profile_frame, how="left", on="link")
-
     turneytab = turneytab[["Name"
                            ,"Geburtsjahr"
                            ,"WerteVon"
                            ,"Kampfstil"
+                           ,"Ambition"
                            ,"Sattelfestigkeit"
                            ,"ErfahrungsgradLh"
                            ,"ErfahrungsgradSh"
