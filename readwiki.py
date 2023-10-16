@@ -183,11 +183,10 @@ def generateTurneycontestants(turneytab, wikipage):
                     }
     
 
-    turneytab.rename(discipline_subs,axis=1,inplace=True)
-
     for dis in discipline_subs.keys():
         if dis in turneytab.columns:
             turneytab[dis] = turneytab[dis].apply(lambda x: x.upper().strip() == "X")
+    turneytab.rename(discipline_subs,axis=1,inplace=True)
 
 
     turneytab.insert(1,"Knappe","")

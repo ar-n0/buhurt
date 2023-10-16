@@ -38,7 +38,7 @@ with t1:
 with t2:
     allow_add = st.checkbox("Hinzufügen von Teilnehmern erlauben", value=False)
 
-st.caption("ℹ Du kannst fehlende Werte direkt in der Tabell nachtragen")
+st.caption("ℹ Du kannst fehlende Werte direkt in der Tabelle nachtragen")
 
 if allow_add:
     dyn = "dynamic"
@@ -52,12 +52,14 @@ col_config["Geburtsjahr"] = st.column_config.TextColumn(required=True)
 col_config["Kampfstil"] = st.column_config.SelectboxColumn(options=readwiki.getStyles())
 col_config["Ambition"] = st.column_config.SelectboxColumn(options=readwiki.getAmbitions())
 
-skillcols = ["ErfahrungsgradLh","ErfahrungsgradSh","ErfahrungsgradLr","ErfahrungsgradBu"]
+skillcols = [x for x in turneytable.columns.tolist() if "Erfahrungsgrad" in x]
 for col in skillcols:
     col_config[col] = st.column_config.SelectboxColumn(label=col
                                                        ,options=readwiki.getSkills()
                                                         )
-
+disc_cols = [x for x in turneytable.columns.tolist() if "Wettkampf" in x]
+for col in disc_cols:
+    col_config[col] = st.column_config.CheckboxColumn()
 
 edited_df = st.data_editor(turneytable,num_rows=dyn,column_config=col_config)
 
