@@ -45,7 +45,21 @@ if allow_add:
 else:
     dyn = "static"
 
-edited_df = st.data_editor(turneytable,num_rows=dyn)
+
+
+col_config = {}
+col_config["Geburtsjahr"] = st.column_config.TextColumn(required=True)
+col_config["Kampfstil"] = st.column_config.SelectboxColumn(options=readwiki.getStyles())
+col_config["Ambition"] = st.column_config.SelectboxColumn(options=readwiki.getAmbitions())
+
+skillcols = ["ErfahrungsgradLh","ErfahrungsgradSh","ErfahrungsgradLr","ErfahrungsgradBu"]
+for col in skillcols:
+    col_config[col] = st.column_config.SelectboxColumn(label=col
+                                                       ,options=readwiki.getSkills()
+                                                        )
+
+
+edited_df = st.data_editor(turneytable,num_rows=dyn,column_config=col_config)
 
 
 error_noBirth = edited_df[pd.isnull(edited_df["Geburtsjahr"])]["Name"]
@@ -65,23 +79,23 @@ if len(error_noBirth) + len(error_noSkill_lh) + len(error_noSkill_sh) + len(erro
     
     if len(error_noBirth) > 0:
         st.error("Die folgenden Teilnehmenden haben kein Geburtsjahr hinterlegt")
-        st.dataframe(error_noBirth)
+        st.dataframe(error_noBirth,use_container_width=True)
 
     if len(error_noSkill_lh) > 0:
         st.error("Die folgenden Teilnehmenden haben keinen Wert \"Erfahrungsgrad Lh\" hinterlegt, obwohl sie an der Disziplin teilnehmen")
-        st.dataframe(error_noSkill_lh)
+        st.dataframe(error_noSkill_lh,use_container_width=True)
 
     if len(error_noSkill_sh) > 0:
         st.error("Die folgenden Teilnehmenden haben keinen Wert \"Erfahrungsgrad Sh\" hinterlegt, obwohl sie an der Disziplin teilnehmen")
-        st.dataframe(error_noSkill_sh)
+        st.dataframe(error_noSkill_sh,use_container_width=True)
 
     if len(error_noSkill_lr) > 0:
         st.error("Die folgenden Teilnehmenden haben keinen Wert \"Erfahrungsgrad Lr\" hinterlegt, obwohl sie an der Disziplin teilnehmen")
-        st.dataframe(error_noSkill_lr)
+        st.dataframe(error_noSkill_lr,use_container_width=True)
 
     if len(error_noSkill_bu) > 0:
         st.error("Die folgenden Teilnehmenden haben keinen Wert \"Erfahrungsgrad Bu\" hinterlegt, obwohl sie an der Disziplin teilnehmen")
-        st.dataframe(error_noSkill_bu)
+        st.dataframe(error_noSkill_bu,use_container_width=True)
 
 st.divider()
 st.subheader("Konfiguration")
@@ -102,6 +116,17 @@ with tab3:
     config_tjost_rs = st.text_input('RS Tjost:',value="8")
     config_siegpunkte = st.text_input('Siegpunkte:',value="5")
 
+
+tab21,tab22 = st.columns(2)
+with tab21:
+    config_ambition_start = st.text_input('Ambition Handwaffen Startwert:',value="20")
+    config_ambition_schritt = st.text_input('Ambition Handwaffen Schrittwert:',value="20")
+with tab22:
+    config_ambition_start_lr = st.text_input('Ambition Tjost Startwert:',value="10")
+    config_ambition_schritt_lr = st.text_input('Ambition Tjost Schrittwert:',value="15")
+
+    
+
 st.divider()
 
 
@@ -116,13 +141,17 @@ config = pd.DataFrame.from_dict(
     "TrefferpunktModTjost": [config_tjost_tp],
     "RuestungHandwaffen": [config_hand_rs],
     "RuestungTjost": [config_tjost_rs],
-    "SiegpunktMaximum": [config_siegpunkte]
+    "SiegpunktMaximum": [config_siegpunkte],
+    "AmbitionHandwaffenStart": [config_ambition_start],
+    "AmbitionHandwaffenSchritt": [config_ambition_schritt],
+    "AmbitionTjostStart": [config_ambition_start_lr],
+    "AmbitionTjostSchritt": [config_ambition_schritt_lr]
     }
 )
 
 output_file = "".join(['{\r\n',
                         '"Type": "Ritterliste",\r\n',
-                        '"Version": "1.0",\r\n',
+                        '"Version": "1.1",\r\n',
                         '"Konfiguration":',
                         config.to_json(orient="records")[1:-1],
                         '\r\n,\r\n"Ritter":',

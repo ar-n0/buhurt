@@ -1,48 +1,49 @@
 import requests
 from bs4 import BeautifulSoup
 
-def normaliseSkill (skill):
+def getSkills():
+    return ["Unerfahren",
+            "Durschnittlich",
+            "Erfahren",
+            "Kompetent",
+            "Veteran",
+            "Meisterlich",
+            "Brilliant",
+            "Legendär"
+            ]
+def getStyles():
+    return ["Offensiv","Ausgeglichen","Defensiv"]
+
+def getAmbitions():
+    return ["Vorsichtig","Bedacht","Ehrgeizig","Waghalsig"]
+
+
+def normaliseSkill(skill):
     skill = str(skill).lower()
-    if "unerfahren" in skill:
-        return "unerfahren"
-    elif "durchschnittlich" in skill:
-        return "durchschnittlich"
-    elif "erfahren" in skill:
-        return "erfahren"
-    elif "kompetent" in skill:
-        return "kompetent"
-    elif "veteran" in skill:
-        return "Veteran"
-    elif "meisterlich" in skill:
-        return "meisterlich"
-    elif "brilliant" in skill:
-        return "brilliant"
-    elif "legendär" in skill:
-        return "legendär"
-    else:
-        return None
-    
+    skill_ref = getSkills()
+
+    for reference in skill_ref:
+        if reference.lower() in skill:
+            return reference
+    return None
+
 def normaliseStyle (style):
     style = str(style).lower()
-    if "offensiv" in style:
-        return "offensiv"
-    elif "defensiv" in style:
-        return "defensiv"
-    else:
-        return "ausgeglichen"
+    style_ref = getStyles()
+
+    for reference in style_ref:
+        if reference.lower() in style:
+            return reference
+    return "Ausgeglichen"
 
 def normaliseAmbition(ambition):
-    style = str(ambition).lower()
-    if "vorsichtig" in ambition:
-        return "vorsichtig"
-    elif "bedacht" in ambition:
-        return "bedacht"
-    elif "ehrgeizig" in ambition:
-        return "ehrgeizig"
-    elif "waghalsig" in ambition:
-        return "waghalsig"
-    else:
-        return "bedacht"
+    ambition = str(ambition).lower()
+    ambition_ref = getAmbitions()
+
+    for reference in ambition_ref:
+        if reference.lower() in ambition:
+            return reference
+    return "Bedacht"
 
 def getTurneyContestants(turneypage):
     import pandas as pd
@@ -146,13 +147,42 @@ def getTurneyprofile(fighterpage):
 
 def generateTurneycontestants(turneytab, wikipage):
     import pandas as pd
+    turneytab.insert(0,"Name",turneytab.index)
     
+
+    profiles = []
+    for index, row in turneytab.iterrows():
+         prof  = getTurneyprofile(row["link"])
+         if prof is not None:
+            prof["link"] = row["link"]
+            profiles.append(prof)
+    
+    profile_frame = pd.DataFrame(profiles)
+    profile_frame.set_index("link",inplace=True)
+
+    profile_subs = {
+                    "Leichte Handwaffen":"ErfahrungsgradLh",
+                    "Schwere Handwaffen":"ErfahrungsgradSh",
+                    "Lanzenreiten":"ErfahrungsgradLr",
+                    "Buhurt":"ErfahrungsgradBu",
+                    "Wurfwaffen":"ErfahrungsgradWu",
+                    "Schusswaffen":"ErfahrungsgradSc"
+                    }
+    
+    profile_frame.rename(profile_subs,axis=1,inplace=True)
+    
+
+    turneytab = pd.merge(turneytab, profile_frame, how="left", on="link")
+
+
     discipline_subs = {"Leichte Handwaffen":"WettkampfEinhand",
                        "Schwere Handwaffen":"WettkampfZweihand",
                        "Lanzenreiten":"WettkampfTjost",
                        "Tjost":"WettkampfTjost",
                        "Buhurt":"WettkampfBuhurt"
                     }
+    
+
     turneytab.rename(discipline_subs,axis=1,inplace=True)
 
     for dis in discipline_subs.keys():
@@ -160,10 +190,6 @@ def generateTurneycontestants(turneytab, wikipage):
             turneytab[dis] = turneytab[dis].apply(lambda x: x.upper().strip() == "X")
 
 
-
-    
-    turneytab.insert(0,"Name",turneytab.index)
-    #turneytab.insert(1,"WerteStand","1045")
     turneytab.insert(1,"Knappe","")
     turneytab.insert(1,"KnappeStufe","0")
     turneytab.insert(1,"Springer",False)
