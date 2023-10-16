@@ -3,7 +3,7 @@ import pandas as pd
 import readwiki
 import datetime
 
-st.set_page_config(page_title="Westlande JSON Generator")
+st.set_page_config(page_title="⚔️ Westlande JSON Generator 🛡️")
 st.title("Westlande Turney JSON Generator")
 st.caption("Beta")
 st.divider()
