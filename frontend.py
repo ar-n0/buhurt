@@ -105,6 +105,15 @@ if len(error_noBirth) + len(error_noSkill_lh) + len(error_noSkill_sh) + len(erro
         st.error("Die folgenden Teilnehmenden haben keinen Wert \"Erfahrungsgrad Bu\" hinterlegt, obwohl sie an der Disziplin teilnehmen")
         st.dataframe(error_noSkill_bu,use_container_width=True)
 
+    if len(error_noSkill_sw) > 0:
+        st.error("Die folgenden Teilnehmenden haben keinen Wert \"Erfahrungsgrad Sc\" hinterlegt, obwohl sie an der Disziplin teilnehmen")
+        st.dataframe(error_noSkill_sw,use_container_width=True)
+
+    if len(error_noSkill_wu) > 0:
+        st.error("Die folgenden Teilnehmenden haben keinen Wert \"Erfahrungsgrad Wu\" hinterlegt, obwohl sie an der Disziplin teilnehmen")
+        st.dataframe(error_noSkill_sw,use_container_width=True)
+
+
 st.divider()
 st.subheader("Konfiguration")
 tab1, tab2, tab3 = st.columns(3)
