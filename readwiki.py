@@ -11,6 +11,7 @@ def getSkills():
             "Brilliant",
             "Legendär"
             ]
+
 def getStyles():
     return ["Offensiv","Ausgeglichen","Defensiv"]
 

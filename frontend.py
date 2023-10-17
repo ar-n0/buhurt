@@ -53,7 +53,7 @@ def configureColumns():
     col_config["Kampfstil"] = st.column_config.SelectboxColumn(options=readwiki.getStyles())
     col_config["Ambition"] = st.column_config.SelectboxColumn(options=readwiki.getAmbitions())
     skillcols = [x for x in turneytable.columns.tolist() if "Erfahrungsgrad" in x]
-
+    skillcols.append("Sattelfestigkeit")
     for col in skillcols:
         col_config[col] = st.column_config.SelectboxColumn(label=col
                                                        ,options=readwiki.getSkills()
