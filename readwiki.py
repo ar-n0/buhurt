@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 
 def getSkills():
     return ["Unerfahren",
-            "Durschnittlich",
+            "Durchschnittlich",
             "Erfahren",
             "Kompetent",
             "Veteran",
