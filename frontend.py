@@ -46,22 +46,25 @@ else:
     dyn = "static"
 
 
+def configureColumns():
+    col_config = {}
+    col_config["Geburtsjahr"] = st.column_config.TextColumn(required=True)
+    col_config["Kampfstil"] = st.column_config.SelectboxColumn(options=readwiki.getStyles())
+    col_config["Ambition"] = st.column_config.SelectboxColumn(options=readwiki.getAmbitions())
+    skillcols = [x for x in turneytable.columns.tolist() if "Erfahrungsgrad" in x]
 
-col_config = {}
-col_config["Geburtsjahr"] = st.column_config.TextColumn(required=True)
-col_config["Kampfstil"] = st.column_config.SelectboxColumn(options=readwiki.getStyles())
-col_config["Ambition"] = st.column_config.SelectboxColumn(options=readwiki.getAmbitions())
-
-skillcols = [x for x in turneytable.columns.tolist() if "Erfahrungsgrad" in x]
-for col in skillcols:
-    col_config[col] = st.column_config.SelectboxColumn(label=col
+    for col in skillcols:
+        col_config[col] = st.column_config.SelectboxColumn(label=col
                                                        ,options=readwiki.getSkills()
                                                         )
-disc_cols = [x for x in turneytable.columns.tolist() if "Wettkampf" in x]
-for col in disc_cols:
-    col_config[col] = st.column_config.CheckboxColumn()
+    disc_cols = [x for x in turneytable.columns.tolist() if "Wettkampf" in x]
+    for col in disc_cols:
+        col_config[col] = st.column_config.CheckboxColumn()
 
-edited_df = st.data_editor(turneytable,num_rows=dyn,column_config=col_config)
+    return col_config
+
+
+edited_df = st.data_editor(turneytable,num_rows=dyn,column_config=configureColumns())
 
 
 error_noBirth = edited_df[pd.isnull(edited_df["Geburtsjahr"])]["Name"]
@@ -69,6 +72,8 @@ error_noSkill_lh = edited_df[(pd.isnull(edited_df["ErfahrungsgradLh"])) & edited
 error_noSkill_sh = edited_df[(pd.isnull(edited_df["ErfahrungsgradSh"])) & edited_df["WettkampfZweihand"]]["Name"]
 error_noSkill_lr = edited_df[(pd.isnull(edited_df["ErfahrungsgradLr"])) & edited_df["WettkampfTjost"]]["Name"]
 error_noSkill_bu = edited_df[(pd.isnull(edited_df["ErfahrungsgradBu"])) & edited_df["WettkampfBuhurt"]]["Name"]
+error_noSkill_sw = edited_df[(pd.isnull(edited_df["ErfahrungsgradSc"])) & edited_df["WettkampfSchusswaffen"]]["Name"]
+error_noSkill_wu = edited_df[(pd.isnull(edited_df["ErfahrungsgradWu"])) & edited_df["WettkampfWurfwaffen"]]["Name"]
 
 
 if len(error_noBirth) + len(error_noSkill_lh) + len(error_noSkill_sh) + len(error_noSkill_lr) + len(error_noSkill_bu) > 0:

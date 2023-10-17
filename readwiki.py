@@ -179,7 +179,9 @@ def generateTurneycontestants(turneytab, wikipage):
                        "Schwere Handwaffen":"WettkampfZweihand",
                        "Lanzenreiten":"WettkampfTjost",
                        "Tjost":"WettkampfTjost",
-                       "Buhurt":"WettkampfBuhurt"
+                       "Buhurt":"WettkampfBuhurt",
+                       "Schusswaffen":"WettkampfSchusswaffen",
+                       "Wurfwaffen":"WettkampfWurfwaffen"
                     }
     
 
@@ -193,28 +195,26 @@ def generateTurneycontestants(turneytab, wikipage):
     turneytab.insert(1,"KnappeStufe","0")
     turneytab.insert(1,"Springer",False)
 
+    resultcols = ["Name"
+                  ,"Geburtsjahr"
+                  ,"WerteVon"
+                  ,"Kampfstil"
+                  ,"Ambition"
+                  ,"Sattelfestigkeit"
+                  ,"ErfahrungsgradLh"
+                  ,"ErfahrungsgradSh"
+                  ,"ErfahrungsgradLr"
+                  ,"ErfahrungsgradBu"
+                  ,"ErfahrungsgradSc"
+                  ,"ErfahrungsgradWu"
+                ]
+    for col in [x for x in turneytab if "Wettkampf" in x]:
+        resultcols.append(col)
+    
+    for col in ["Knappe","KnappeStufe","Nsc","Springer"]:
+        resultcols.append(col)
 
-    turneytab = turneytab[["Name"
-                           ,"Geburtsjahr"
-                           ,"WerteVon"
-                           ,"Kampfstil"
-                           ,"Ambition"
-                           ,"Sattelfestigkeit"
-                           ,"ErfahrungsgradLh"
-                           ,"ErfahrungsgradSh"
-                           ,"ErfahrungsgradLr"
-                           ,"ErfahrungsgradBu"
-                           ,"ErfahrungsgradSc"
-                           ,"ErfahrungsgradWu"
-                           ,"WettkampfEinhand"
-                           ,"WettkampfZweihand"
-                           ,"WettkampfTjost"
-                           ,"WettkampfBuhurt"
-                           ,"Knappe"
-                           ,"KnappeStufe"
-                           ,"Nsc"
-                           ,"Springer"
-                           ]
-                        ]
+
+    turneytab = turneytab[resultcols]
     
     return turneytab
