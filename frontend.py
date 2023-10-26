@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import readwiki
 import datetime
+import globals
 
 st.set_page_config(page_title="🛡️Westlande JSON Generator")
 st.title("⚔️Westlande Turney🛡️")
@@ -25,7 +26,7 @@ turney_wikipage = st.text_input('Link zur Wikipage des Turniers:',value= "")
  
 @st.cache_data
 def load_Data(wikipage):
-    return readwiki.generateTurneycontestants(readwiki.getTurneyContestants(wikipage),wikipage)
+    return readwiki.generateTurneycontestants(readwiki.getTurneyContestants(wikipage),wikipage,turney_year)
     
 
 if turney_wikipage == "":
@@ -50,13 +51,13 @@ else:
 def configureColumns():
     col_config = {}
     col_config["Geburtsjahr"] = st.column_config.TextColumn(required=True)
-    col_config["Kampfstil"] = st.column_config.SelectboxColumn(options=readwiki.getStyles())
-    col_config["Ambition"] = st.column_config.SelectboxColumn(options=readwiki.getAmbitions())
+    col_config["Kampfstil"] = st.column_config.SelectboxColumn(options=globals.styles)
+    col_config["Ambition"] = st.column_config.SelectboxColumn(options=globals.ambitions)
     skillcols = [x for x in turneytable.columns.tolist() if "Erfahrungsgrad" in x]
     skillcols.append("Sattelfestigkeit")
     for col in skillcols:
         col_config[col] = st.column_config.SelectboxColumn(label=col
-                                                       ,options=readwiki.getSkills()
+                                                       ,options=globals.skills
                                                         )
     disc_cols = [x for x in turneytable.columns.tolist() if "Wettkampf" in x]
     for col in disc_cols:

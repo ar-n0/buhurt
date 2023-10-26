@@ -1,47 +1,27 @@
 import requests
+import globals
 from bs4 import BeautifulSoup
-
-def getSkills():
-    return ["Unerfahren",
-            "Durchschnittlich",
-            "Erfahren",
-            "Kompetent",
-            "Veteran",
-            "Meisterlich",
-            "Brilliant",
-            "Legendär"
-            ]
-
-def getStyles():
-    return ["Offensiv","Ausgeglichen","Defensiv"]
-
-def getAmbitions():
-    return ["Vorsichtig","Bedacht","Ehrgeizig","Waghalsig"]
-
 
 def normaliseSkill(skill):
     skill = str(skill).lower()
-    skill_ref = getSkills()
-
-    for reference in skill_ref:
+    
+    for reference in globals.skills:
         if reference.lower() in skill:
             return reference
     return None
 
 def normaliseStyle (style):
     style = str(style).lower()
-    style_ref = getStyles()
-
-    for reference in style_ref:
+    
+    for reference in globals.styles:
         if reference.lower() in style:
             return reference
     return "Ausgeglichen"
 
 def normaliseAmbition(ambition):
     ambition = str(ambition).lower()
-    ambition_ref = getAmbitions()
-
-    for reference in ambition_ref:
+    
+    for reference in globals.ambitions:
         if reference.lower() in ambition:
             return reference
     return "Bedacht"
@@ -78,7 +58,7 @@ def getPageLinks(turneypage):
         links.append([a_el.text,linktext])
     return links
 
-def getTurneyprofile(fighterpage):
+def getTurneyprofile(fighterpage,turney_year):
     try:
         page = requests.get(fighterpage)
     except requests.exceptions.ConnectionError:
@@ -103,6 +83,7 @@ def getTurneyprofile(fighterpage):
         if "Kampfstil" in item[0]:
             item[1] = normaliseStyle(item[1])
         elif "Ambition" in item[0]:
+            item[0]= item[0].replace("(","").replace(")","")
             item[1] = normaliseAmbition(item[1])
         else:
             item[1] = normaliseSkill(item[1])
@@ -110,7 +91,50 @@ def getTurneyprofile(fighterpage):
         if item[1] is not None:
             profile[item[0].split("(")[0].strip()] = item[1]
     
+
+    if "Ambition" in profile.keys():
+        profile["Ambition Handwaffen"] = profile["Ambition"]
+        profile["Ambition Tjost"] = profile["Ambition"]
+
     
+    squires = []
+    squirename = ""
+    squirebirth = ""
+    infocontent = soup.find("div",class_="InfoContent")
+    if infocontent is not None:
+        for trow in infocontent.find_all("tr"):
+            if "Zöglinge:" in trow.text:
+                for a in trow.find_all("a",href=True):
+                    squires.append("https://www.westlande.de" + a["href"] + "&action=edit")
+                break
+        
+        if len(squires) > 0:
+            for squire in squires:
+                squiresoup = BeautifulSoup(requests.get(squire).content,"html.parser")
+                if "{{InfoBoxPerson" in squiresoup.text:
+                    infobox = squiresoup.text.split("{{InfoBoxPerson")[1].split("}}")[0]
+                    squirename = infobox.split("|")[1].replace("NAME=","").strip()
+                    squirebirth = infobox[infobox.find("|GEBURTSJAHR="):].split("|")[1].replace("GEBURTSJAHR=","").strip()
+                    break
+                    
+        profile["Knappe"] = squirename
+
+        squirelevel = ""
+        if squirebirth == "":
+            squireage = None
+        else:
+            squireage = int(squirebirth) - int(turney_year)
+            if squireage >= 18:
+                squirelevel = "Erfahren"
+            elif squireage >= 16:
+                squirelevel = "Durchschnittlich"
+            elif squireage is not None:
+                squirelevel = "Unerfahren"
+        
+        profile["KnappeStufe"] = squirelevel
+
+
+
     import re
     if soup.find("div",class_="InfoEnd"):
         endbox = soup.find("div",class_="InfoEnd").text
@@ -143,17 +167,16 @@ def getTurneyprofile(fighterpage):
         profile["Geburtsjahr"] = None
         pass
 
-
-    return profile         
-
-def generateTurneycontestants(turneytab, wikipage):
+    return profile    
+ 
+def generateTurneycontestants(turneytab, wikipage, turney_year):
     import pandas as pd
     turneytab.insert(0,"Name",turneytab.index)
     
 
     profiles = []
     for index, row in turneytab.iterrows():
-         prof  = getTurneyprofile(row["link"])
+         prof  = getTurneyprofile(row["link"], turney_year)
          if prof is not None:
             prof["link"] = row["link"]
             profiles.append(prof)
@@ -167,7 +190,9 @@ def generateTurneycontestants(turneytab, wikipage):
                     "Lanzenreiten":"ErfahrungsgradLr",
                     "Buhurt":"ErfahrungsgradBu",
                     "Wurfwaffen":"ErfahrungsgradWu",
-                    "Schusswaffen":"ErfahrungsgradSc"
+                    "Schusswaffen":"ErfahrungsgradSc",
+                    "Ambition Handwaffen":"AmbitionHandwaffen"
+                    ,"Ambition Tjost":"AmbitionTjost"
                     }
     
     profile_frame.rename(profile_subs,axis=1,inplace=True)
@@ -182,7 +207,7 @@ def generateTurneycontestants(turneytab, wikipage):
                        "Tjost":"WettkampfTjost",
                        "Buhurt":"WettkampfBuhurt",
                        "Schusswaffen":"WettkampfSchusswaffen",
-                       "Wurfwaffen":"WettkampfWurfwaffen"
+                       "Wurfwaffen":"WettkampfWurfwaffen",
                     }
     
 
@@ -192,15 +217,19 @@ def generateTurneycontestants(turneytab, wikipage):
     turneytab.rename(discipline_subs,axis=1,inplace=True)
 
 
-    turneytab.insert(1,"Knappe","")
-    turneytab.insert(1,"KnappeStufe","0")
     turneytab.insert(1,"Springer",False)
+
+
+    turneytab["Ambition Handwaffen"].fillna(turneytab["Ambition"])
+    turneytab["Ambition Tjost"].fillna(turneytab["Ambition"])
+
 
     resultcols = ["Name"
                   ,"Geburtsjahr"
                   ,"WerteVon"
                   ,"Kampfstil"
-                  ,"Ambition"
+                  ,"Ambition Tjost"
+                  ,"Ambition Handwaffen"
                   ,"Sattelfestigkeit"
                   ,"ErfahrungsgradLh"
                   ,"ErfahrungsgradSh"
