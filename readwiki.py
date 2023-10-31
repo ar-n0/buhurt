@@ -26,18 +26,24 @@ def normaliseAmbition(ambition):
             return reference
     return "Bedacht"
 
-def getTurneyContestants(turneypage):
+def getContestantLists(wikipage):
     import pandas as pd
-    tables = pd.read_html(turneypage)
+    tables = pd.read_html(wikipage)
+    output = []
     for table in tables:
-        tcol = table.columns.tolist()
-        if "Name" in tcol and ("Leichte Handwaffen" in tcol  or "Schwere Handwaffen" in tcol or "Lanzenreiten" in tcol):
-            linktbl = pd.DataFrame(getPageLinks(turneypage))
-            linktbl.set_index(0, inplace=True)
-            table.set_index("Name", inplace=True)
-            table = table.join(linktbl)
-            table.rename({1:"link"},axis=1,inplace=True)
-            return table    
+        if "Name" in table.columns.tolist():
+            output.append(table)
+    return output
+
+
+def getTurneyContestants(wikitable,turneypage):
+    import pandas as pd
+    linktbl = pd.DataFrame(getPageLinks(turneypage))
+    linktbl.set_index(0, inplace=True)
+    wikitable.set_index("Name", inplace=True)
+    wikitable = wikitable.join(linktbl)
+    wikitable.rename({1:"link"},axis=1,inplace=True)
+    return wikitable    
 
 def getPageLinks(turneypage):
     try:
@@ -92,8 +98,17 @@ def getTurneyprofile(fighterpage,turney_year):
             profile[item[0].split("(")[0].strip()] = item[1]
     
 
-    if "Ambition" in profile.keys():
+    if "Ambition" not in profile.keys():
+        if "Ambition Handwaffen" in profile.keys():
+            profile["Ambition"] = profile["Ambition Handwaffen"]
+        elif "Ambition Tjost" in profile.keys():
+            profile["Ambition"] = profile["Ambition Tjost"]
+        else:
+            profile["Ambition"] = None
+         
+    if "Ambition Handwaffen" not in profile.keys():
         profile["Ambition Handwaffen"] = profile["Ambition"]
+    if "Ambition Tjost" not in profile.keys():
         profile["Ambition Tjost"] = profile["Ambition"]
 
     
@@ -173,7 +188,6 @@ def generateTurneycontestants(turneytab, wikipage, turney_year):
     import pandas as pd
     turneytab.insert(0,"Name",turneytab.index)
     
-
     profiles = []
     for index, row in turneytab.iterrows():
          prof  = getTurneyprofile(row["link"], turney_year)
@@ -220,16 +234,17 @@ def generateTurneycontestants(turneytab, wikipage, turney_year):
     turneytab.insert(1,"Springer",False)
 
 
-    turneytab["Ambition Handwaffen"].fillna(turneytab["Ambition"])
-    turneytab["Ambition Tjost"].fillna(turneytab["Ambition"])
+    turneytab["AmbitionHandwaffen"].fillna(turneytab["Ambition"])
+    turneytab["AmbitionTjost"].fillna(turneytab["Ambition"])
 
 
     resultcols = ["Name"
                   ,"Geburtsjahr"
                   ,"WerteVon"
                   ,"Kampfstil"
-                  ,"Ambition Tjost"
-                  ,"Ambition Handwaffen"
+                  ,"Ambition"
+                  ,"AmbitionTjost"
+                  ,"AmbitionHandwaffen"
                   ,"Sattelfestigkeit"
                   ,"ErfahrungsgradLh"
                   ,"ErfahrungsgradSh"

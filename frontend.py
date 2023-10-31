@@ -21,17 +21,26 @@ else:
 
 turney_year = st.text_input('Jahr des Turniers:',value=year_sug)
 
-
 turney_wikipage = st.text_input('Link zur Wikipage des Turniers:',value= "")
- 
-@st.cache_data
-def load_Data(wikipage):
-    return readwiki.generateTurneycontestants(readwiki.getTurneyContestants(wikipage),wikipage,turney_year)
-    
 
 if turney_wikipage == "":
     st.info("Bitte trage einen Link ein.",icon="ℹ️")
     st.stop()
+
+
+contestant_tables = readwiki.getContestantLists(turney_wikipage)
+table_options =  list(range(len(contestant_tables))) 
+
+table_index = st.selectbox("Wähle die relevante Tabelle",options=table_options) #,format_func=lambda x: contestant_tables[x].columns)
+
+st.dataframe(contestant_tables[table_index].head(1))
+
+wikitable = contestant_tables[table_index]
+@st.cache_data
+def load_Data(wikipage):
+    return readwiki.generateTurneycontestants(readwiki.getTurneyContestants(wikitable,turney_wikipage),wikitable,turney_year)
+    
+
 turneytable = load_Data(turney_wikipage)
 
 t1, t2 = st.columns(2)
@@ -53,6 +62,8 @@ def configureColumns():
     col_config["Geburtsjahr"] = st.column_config.TextColumn(required=True)
     col_config["Kampfstil"] = st.column_config.SelectboxColumn(options=globals.styles)
     col_config["Ambition"] = st.column_config.SelectboxColumn(options=globals.ambitions)
+    col_config["Ambition Handwaffen"] = st.column_config.SelectboxColumn(options=globals.ambitions)
+    col_config["Ambition Tjost"] = st.column_config.SelectboxColumn(options=globals.ambitions)
     skillcols = [x for x in turneytable.columns.tolist() if "Erfahrungsgrad" in x]
     skillcols.append("Sattelfestigkeit")
     for col in skillcols:
